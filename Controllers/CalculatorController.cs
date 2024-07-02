@@ -4,10 +4,10 @@ using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using IO.Swagger.Services;
+using CalculatorApi.Services;
 using Newtonsoft.Json.Linq;
 
-namespace IO.Swagger.Controllers
+namespace CalculatorApi.Controllers
 {
     /// <summary>
     /// Controller handling operations for a calculator API.
@@ -17,16 +17,19 @@ namespace IO.Swagger.Controllers
     public class CalculatorApiController : ControllerBase
     {
         private readonly TokenService _tokenService;
+        private readonly CalculationService _calculationService;
 
-        public CalculatorApiController(TokenService tokenService)
+        public CalculatorApiController(TokenService tokenService, CalculationService calculationService)
         {
             _tokenService = tokenService;
+            _calculationService = calculationService;
+
         }
 
- 
+
         // Authenticates the user and generates a JWT token.
         //Login credentials is username = test and password = password for testing
-       
+
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginModel login)
         {
@@ -35,7 +38,7 @@ namespace IO.Swagger.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (login.Username == "test" && login.Password == "password")
+            if (login.Username.Equals("test") && login.Password.Equals("password"))
             {
                 var token = _tokenService.GenerateToken(login.Username);
                 return Ok(new { Token = token });
@@ -51,50 +54,28 @@ namespace IO.Swagger.Controllers
         [SwaggerResponse(200, "A JSON object containing the result and the description of the operation performed.")]
         [SwaggerResponse(400, "Invalid input")]
         [SwaggerResponse(500, "Internal server error")]
-        public IActionResult CalculatePost([FromBody] CalculateModel body, [FromHeader][Required] string operation)
+        public IActionResult Calculate([FromBody] CalculateModel body, [FromHeader][Required] string operation)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            decimal result = 0;
-
             try
             {
-                switch (operation.ToLower())
-                {
-                    case "add":
-                        result = body.Number1 + body.Number2;
-                        break;
-                    case "subtract":
-                        result = body.Number1 - body.Number2;
-                        break;
-                    case "multiply":
-                        result = body.Number1 * body.Number2;
-                        break;
-                    case "divide":
-                        if (body.Number2 != 0)
-                        {
-                            result = body.Number1 / body.Number2;
-                        }
-                        //Division by zero
-                        else
-                        {
-                            return BadRequest("Division by zero is not allowed.");
-                        }
-                        break;
-                    //if the operator doesn't valid
-                    default:
-                        return BadRequest("Invalid operation specified.");
-                }
+                var result = _calculationService.PerformCalculation(body.Number1, body.Number2, operation);
+                return Ok(result);
             }
-            catch (Exception ex) 
+            catch (InvalidOperationException ex)
             {
-                return BadRequest("One or both numbers are out of valid range.");
-
+                return BadRequest(ex.Message);
             }
-            return Ok(result);
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+           
+          
         }
     }
 

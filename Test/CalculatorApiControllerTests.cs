@@ -1,28 +1,26 @@
 ﻿using System.Net;
 using System.Security.Claims;
-using IO.Swagger.Controllers;
-using IO.Swagger.Services;
+using CalculatorApi.Controllers;
+using CalculatorApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Xunit;
 
-namespace IO.Swagger.Tests
+namespace CalculatorApi.Tests
 {
     public class CalculatorApiControllerTests
     {
         private readonly Mock<TokenService> _mockTokenService;
+        private readonly Mock<CalculationService> _mockCalculationService;
         private readonly CalculatorApiController _controller;
- 
-
 
         public CalculatorApiControllerTests()
         {
             _mockTokenService = new Mock<TokenService>();
-            _controller = new CalculatorApiController(_mockTokenService.Object);
-         
-
+            _mockCalculationService = new Mock<CalculationService>();
+            _controller = new CalculatorApiController(_mockTokenService.Object, _mockCalculationService.Object);
         }
 
 
@@ -48,10 +46,10 @@ namespace IO.Swagger.Tests
         }
             [Fact]
         //test for add operator
-        public void CalculatePost_AddOperation_ReturnsOkResult()
+        public void Calculate_AddOperation_ReturnsOkResult()
         {
             var calculateModel = new CalculateModel { Number1 = 10, Number2 = 5 };
-            var result = _controller.CalculatePost(calculateModel, "add") as OkObjectResult;
+            var result = _controller.Calculate(calculateModel, "add") as OkObjectResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
             Assert.Equal(15m, result.Value);
@@ -60,11 +58,11 @@ namespace IO.Swagger.Tests
 
         [Fact]
         //test for subtrct operator
-        public void CalculatePost_SubtractOperation_ReturnsCorrectResult()
+        public void Calculate_SubtractOperation_ReturnsCorrectResult()
         {
             var calculateModel = new CalculateModel { Number1 = 10, Number2 = 5 };
 
-            var result = _controller.CalculatePost(calculateModel, "subtract") as OkObjectResult;
+            var result = _controller.Calculate(calculateModel, "subtract") as OkObjectResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
             Assert.Equal(5m, result.Value);
@@ -72,10 +70,10 @@ namespace IO.Swagger.Tests
 
         [Fact]
         //test for multiply operator
-        public void CalculatePost_MultiplyOperation_ReturnsCorrectResult()
+        public void Calculate_MultiplyOperation_ReturnsCorrectResult()
         {
             var calculateModel = new CalculateModel { Number1 = 10, Number2 = 5 };
-            var result = _controller.CalculatePost(calculateModel, "multiply") as OkObjectResult;
+            var result = _controller.Calculate(calculateModel, "multiply") as OkObjectResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
             Assert.Equal(50m, result.Value);
@@ -83,10 +81,10 @@ namespace IO.Swagger.Tests
 
         [Fact]
         //test for divide operator
-        public void CalculatePost_DivideOperation_ReturnsCorrectResult()
+        public void Calculate_DivideOperation_ReturnsCorrectResult()
         {
             var calculateModel = new CalculateModel { Number1 = 10, Number2 = 5 };
-            var result = _controller.CalculatePost(calculateModel, "divide") as OkObjectResult;
+            var result = _controller.Calculate(calculateModel, "divide") as OkObjectResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
             Assert.Equal(2m, result.Value);
@@ -94,10 +92,10 @@ namespace IO.Swagger.Tests
 
         [Fact]
         //Division by zero test
-        public void CalculatePost_DivideByZero_ReturnsBadRequest()
+        public void Calculate_DivideByZero_ReturnsBadRequest()
         {
             var calculateModel = new CalculateModel { Number1 = 10, Number2 = 0 };
-            var result = _controller.CalculatePost(calculateModel, "divide") as BadRequestObjectResult;
+            var result = _controller.Calculate(calculateModel, "divide") as BadRequestObjectResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.BadRequest, result.StatusCode);
             Assert.Equal("Division by zero is not allowed.", result.Value);
@@ -105,20 +103,20 @@ namespace IO.Swagger.Tests
 
         [Fact]
         //Invalid operation test
-        public void CalculatePost_InvalidOperation_ReturnsBadRequest()
+        public void Calculate_InvalidOperation_ReturnsBadRequest()
         {
             var calculateModel = new CalculateModel { Number1 = 10, Number2 = 5 };
-            var result = _controller.CalculatePost(calculateModel, "invalid") as BadRequestObjectResult;
+            var result = _controller.Calculate(calculateModel, "invalid") as BadRequestObjectResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.BadRequest, result.StatusCode);
             Assert.Equal("Invalid operation specified.", result.Value);
         }
         //Add 1 to the Maxvalue
         [Fact]
-        public void CalculatePost_MaxValueAddition_ReturnsBadRequest()
+        public void Calculate_MaxValueAddition_ReturnsBadRequest()
         {
             var calculateModel = new CalculateModel { Number1 = decimal.MaxValue, Number2 = 1 };
-            var result = _controller.CalculatePost(calculateModel, "add") as BadRequestObjectResult;
+            var result = _controller.Calculate(calculateModel, "add") as BadRequestObjectResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.BadRequest, result.StatusCode);
             Assert.Contains("One or both numbers are out of valid range.", result.Value.ToString());
@@ -126,11 +124,11 @@ namespace IO.Swagger.Tests
 
         //Substract 1 from the Minvalue
         [Fact]
-        public void CalculatePost_MinValueSubtraction_ReturnsBadRequest()
+        public void Calculate_MinValueSubtraction_ReturnsBadRequest()
         {
  
             var calculateModel = new CalculateModel { Number1 = decimal.MinValue, Number2 = 1 };
-            var result = _controller.CalculatePost(calculateModel, "subtract") as BadRequestObjectResult;
+            var result = _controller.Calculate(calculateModel, "subtract") as BadRequestObjectResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.BadRequest, result.StatusCode);
             Assert.Contains("One or both numbers are out of valid range.", result.Value.ToString());

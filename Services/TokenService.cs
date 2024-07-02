@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace IO.Swagger.Services
+namespace CalculatorApi.Services
 {
     // Service for generating JWT tokens.
   

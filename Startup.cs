@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -9,11 +7,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using IO.Swagger.Services;
+using CalculatorApi.Services;
 using Microsoft.IdentityModel.Tokens;
-using System.Buffers.Text;
 
-namespace IO.Swagger
+namespace CalculatorApi
 {
     public class Startup
     {
@@ -84,6 +81,7 @@ namespace IO.Swagger
             });
 
             services.AddScoped<TokenService>();
+            services.AddScoped<CalculationService>();
         }
 
  
